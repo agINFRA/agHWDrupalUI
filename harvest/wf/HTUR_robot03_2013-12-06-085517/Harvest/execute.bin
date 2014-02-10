@@ -1,0 +1,111 @@
+#!/bin/sh
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+#TARGET=`cat target.txt | cut -d" " -f 1 `
+#KEY=`cat target.txt | cut -d" " -f 2`
+echo "Execution has started at :"
+date >> stdout.log
+cat target.txt
+ls -l
+TARGET=`grep -Po '(?<="url":")[^"]*' target.txt`
+KEY=`cat key.txt`
+MAX=`cat max.txt`
+echo $TARGET
+
+echo $KEY
+tar -xzf application.tgz
+rm -f application.tgz
+
+LOCALCLASSPATH=$CLASSPATH
+for JAR in *.jar; do
+LOCALCLASSPATH="$LOCALCLASSPATH:$JAR"
+done
+export CLASSPATH=$LOCALCLASSPATH
+
+echo "CLASSPATH ...."
+echo $CLASSPATH
+echo "...........END"
+java -version 1>gridnfo.log 2>gridnfo.log
+pjava=$?
+if test $pjava -ne 0
+then
+ echo 'JVM is not found on the selected remote resource.' >>stderr.log
+ echo 'The DCI Bridge is able to send a JVM. However this service is switched of.' >>stderr.log
+ echo 'Either select a proper remote resource,' >>stderr.log
+ echo 'or ask the system administrator of the DCI Bridge for enabling the JVM transfer.' >>stderr.log
+fi
+echo '- Exe started at          :' `date` >> gridnfo.log
+#java -jar harvesting.jar $TARGET "." $KEY &
+${VO_VO_AGINFRA_EU_SW_DIR}/agJRE-1.7.0-17/bin/java -jar ${VO_VO_AGINFRA_EU_SW_DIR}/agDataHarvester-1.0.1/agDataHarvester-1.0.1.jar $TARGET "." $KEY &
+#exitc=$?
+NOUTPUTS=`ls -l *.xml | wc -l`
+PID=$!
+echo $PID
+echo "Number of outputs:"$NOUTPUTS
+PIDISALIVE=`ps -p $PID | grep $PID | wc -l` 
+echo "Process is alive? " $PIDISALIVE
+
+while [ $NOUTPUTS -le $MAX -a $PIDISALIVE != "0" ]
+do
+ echo "Sleeptime... " >> stdout.log
+ date
+ sleep 15
+ NOUTPUTS=`ls -l *.xml | wc -l`
+ PIDISALIVE=`ps -p $PID | grep $PID | wc -l`
+ echo "Number of outputs:"$NOUTPUTS
+done
+
+echo '- Exe finished at         :' `date` >> gridnfo.log
+echo '- The exit code of the exe:' $PID >> gridnfo.log
+#rm -f -r ./java
+#if test $PID -ne 0
+# then
+# echo "java process failed" >> stderr.log
+# exit 1
+#fi
+ 
+echo "number of required files reached... killing java process"
+kill $PID
+
+ 
+echo '- Wrapper script finished succesfully '>> gridnfo.log
+
+#echo "Renaming outputs..."
+INDEX=0
+mkdir xmls
+for XML in *.xml; do
+
+echo $XML "is being moved"
+#echo $XML ./oai_record.xml_$INDEX > fileNameMap
+#mv $XML ./oai_record.xml_$INDEX
+mv $XML ./xmls
+INDEX=` expr $INDEX + 1`
+
+if [ "$INDEX" -eq "$MAX" ]; then
+ break
+fi
+
+
+
+done
+cd xmls
+ls -l
+NUMBOFOUTPUTS=`ls -l | wc -l`
+NOTHING=1
+echo  "numofoutputs=$NUMBOFOUTPUTS nothing=$NOTHING"
+if [ "$NUMBOFOUTPUTS" -eq "$NOTHING" ]; then
+echo "No outputs."
+exit 1
+fi
+tar cvzf ./../outputs.tgz .
+cd ..
+
+#echo "Execution has finished at :" >> stdout.log
+#date >> stdout.log
+
+
+echo "EXECUTION_ENDTIME:" `date +%s`
+exit 0
+

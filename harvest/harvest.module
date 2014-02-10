@@ -1,0 +1,980 @@
+<?php
+
+/**
+ * @file
+ * Configure and execute HarvestTransformUploadRegister01 workflow using gUSE/Remote API
+ * Call gUSE remote api, submit a workflow, get status, and get outputs.
+ */
+
+
+/**
+ * Name of the workflow (installed in module directory 'wf')
+ */
+define('H_WFNAME', 'HTUR_robot03_2013-12-06-085517');
+
+
+
+
+define('H_FILTER_NONE', 0);
+/**
+ * filter id for Educational
+ */
+define('H_FILTER_EDU', 1);
+/**
+ * filter id for Bibliographic
+ */
+define('H_FILTER_BIBLIO', 2);
+/**
+ * Workflow is finished, saved.
+ */
+define('H_GUSEID_SAVED_OK','savedok');
+/**
+ * Workflow is finished, saved.
+ */
+define('H_GUSEID_SAVED_FAILED','savedfailed');
+
+/**
+ * Implements hook_block_info.
+ */
+function harvest_block_info() {
+    $blocks['harvest'] = array('info' => t('harvest block'));
+    return $blocks;
+}
+
+/**
+ * Implements hook_help.
+ */
+function harvest_help($path, $arg) {
+    if ($path == 'admin/help#harvest') {
+        return t('Before the first use please configure the Harvest module.');
+    }
+}
+
+function harvest_menu() {
+
+    $items = array();
+
+    $items['admin/settings/harvest'] = array(
+        'title' => 'Harvest module settings',
+        'description' => 'Harvest admin settings page',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('harvest_admin'),
+        'access arguments' => array('administer harvest settings'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+
+    return $items;
+}
+
+function harvest_empty_form() {
+    return array();
+}
+
+function harvest_admin() {
+    $form = array();
+
+    try {
+        guse_cURLcheckFunctions();
+    } catch (Exception $exc) {
+        drupal_set_message($exc->getMessage(), 'error');
+        return drupal_get_form('harvest_empty_form');
+    }
+
+    $form['harvest_guseremoteurl'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Guse Remote API URL'),
+        '#default_value' => variable_get('harvest_guseremoteurl'),
+        '#size' => 60,
+        //'#maxlength' => 2,
+        '#description' => t("The URL of the Remote API in gUSE/wspgrade. http://example.com:8080/wspgrade/RemoteServlet"),
+        '#required' => TRUE,
+    );
+    $form['harvest_gusepass'] = array(
+        '#type' => 'password',
+        '#title' => t('Guse Remote API password'),
+        '#default_value' => variable_get('harvest_gusepass'),
+        '#size' => 50,
+        '#element_validate' => array('harvest_gusepass_admin_validate'),
+        '#description' => variable_get('harvest_gusepass')?t('Password is saved. Leave this field blank to not change your password.'):t('Required.'),
+    );
+    $form['harvest_ringcache'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Ring dropdown list cache lifetime in second'),
+        '#default_value' => _harvest_getringcache(),
+        '#size' => 50,
+        '#required' => TRUE,
+        '#element_validate' => array('harvest_ringcache_admin_validate'),
+        '#description' => t('Cron will call the clear function.'),
+    );    
+    return system_settings_form($form);
+}
+
+/**
+ * returns the configured cache lifetime in second, or the default 600
+ * @return int
+ */
+function _harvest_getringcache() {
+    if (variable_get('harvest_ringcache')) {
+        return variable_get('harvest_ringcache');
+    }
+    return 600;
+}
+ function harvest_gusepass_admin_validate($element, &$form_state, $form) {
+    if (empty($element['#value'])) {
+        if (variable_get('harvest_gusepass')) {//do not change password
+            $form_state['values']['harvest_gusepass']= variable_get('harvest_gusepass');//
+            drupal_set_message('Password not changed.');
+        }  else {
+            form_error($element, t('This field is required.'));
+        }        
+    }
+}
+ function harvest_ringcache_admin_validate($element, &$form_state, $form) {
+    $options = array('options' => array('min_range' => 0));
+    if (empty($element['#value'])) {
+        form_error($element, t('This field is required.'));
+    } elseif (!filter_var($element['#value'], FILTER_VALIDATE_INT, $options) !== FALSE) {
+        form_error($element, t('This field must be numeric.'));
+    }
+}
+
+/**
+ * Implements hook_block_view.
+ */
+function harvest_block_view($delta = '') {
+    global $user;
+    if ($user->uid) {//user is logged in        
+        //drupal_set_message(_harvest_getdetail(''));
+        //test output:
+//        $outputurl = _harvest_getFinalOutString(_harvest_getUserWorkDir() . '/output.zip');
+//        drupal_set_message(t('Finished, work saved.'));
+//        $block['content'] = t('Work finished. You can download the results:') . '<br/>' . $outputurl; 
+//        return $block;
+
+        //variable_del('harvest_gusepass');
+
+        if (_harvest_getGuseID()) {
+            $guseid = _harvest_getGuseID();
+
+            if ($guseid == H_GUSEID_SAVED_OK) {//wf is finished downloaded and saved. show outputs, and reset form
+                $outputurl = _harvest_getFinalOutString(_harvest_getUserWorkDir() . '/output.zip');
+                $msg='<div style="color:#567433;">Harvesting target(s) is finished successfully.</div> You can download the harvested records via the following links:' . '<br/><br/>' . $outputurl.'<br/>';
+                $block['content'] = drupal_get_form('harvest_form_finalstatus', $msg);
+                
+            } else if ($guseid == H_GUSEID_SAVED_FAILED) {//wf is failed, downloaded and saved. show reset form                 
+                $block['content'] = drupal_get_form('harvest_form_finalstatus', t('Work failed.'));
+                
+            } else {//NO saved WF
+                $status = guse_getdetailsinfo(_harvest_getTargetURL(), _harvest_getTargetPass(), $guseid);
+                //drupal_set_message(_harvest_getdetail($status));    
+                
+                if (stripos($status, 'finished', 0) === 0) {//workflow is finished                
+                    guse_download(_harvest_getTargetURL(), _harvest_getTargetPass(), $guseid, _harvest_getUserWorkDir() . '/output.zip');
+                    $outputurl = _harvest_getFinalOutString(_harvest_getUserWorkDir() . '/output.zip');
+                    $msg='<div style="color:#567433;">Harvesting target(s) is finished successfully.</div> You can download the harvested records via the following links:' . '<br/><br/>' . $outputurl.'<br/>';
+                    $block['content'] = drupal_get_form('harvest_form_finalstatus', $msg);
+                    drupal_set_message(t('Finished, work saved.'));
+
+                    _harvest_setGuseID(H_GUSEID_SAVED_OK);
+                } elseif (stripos($status, 'error', 0) === 0) {//workflow is failed
+                    $block['content'] = drupal_get_form('harvest_form_statusdetail', _harvest_getdetail($status), $guseid);
+                    guse_download(_harvest_getTargetURL(), _harvest_getTargetPass(), $guseid, _harvest_getUserWorkDir() . '/output.zip');
+                    drupal_set_message(t('Failed, work saved.'));
+                    _harvest_getFinalErrorString(_harvest_getUserWorkDir() . '/output.zip');
+                    _harvest_delGuseID();
+                } elseif (stripos($status, 'not valid data', 0) === 0) {//invalid WF data, reset..
+                    _harvest_delGuseID();
+                    drupal_set_message(t('Work lost, set to init state.'));
+                    $block['content'] = drupal_get_form('harvest_form');
+                } else {//workflow is running
+                    $block['content'] = drupal_get_form('harvest_form_statusdetail', _harvest_getdetail($status), $guseid); //.t('Running WF id =@guseid! status=@gusestatus!', array('@guseid' => $guseid, '@gusestatus' => $status));
+                }
+            }
+        } else {//workflow is not submitted
+            $block['content']['a'] = drupal_get_form('harvest_formring');
+            $block['content']['b'] = drupal_get_form('harvest_form');
+        }
+    } else {//anonymous user
+        $block['content'] = t('Log in!');
+    }
+    return $block;
+}
+
+function harvest_form_statusdetail($form, &$form_submit, $detail, $guseid='') {
+    $form['progress'] = array(
+        '#markup' => $detail['progress'],
+    );
+    $form['detail'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Detailed information'),
+        '#weight' => 5,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+    );
+    $form['detail']['guseid'] = array(
+        '#markup' => t('gUSE ID: ').$guseid,
+    );    
+    $form['detail']['status'] = array(
+        '#markup' => $detail['detail'],
+    );
+
+    return $form;
+}
+
+function harvest_form_finalstatus($form, &$form_submit, $msg='') {
+    
+    $form['status'] = array(
+        '#markup' => $msg,
+    );
+    $form['submit'] = array(
+        '#value' => 'Harvest new target',
+        '#type' => 'submit',
+        
+    );
+    $form['submit_description'] = array(
+        '#markup' => '<br>Warning: links from the current execution will be deleted!',
+    );
+    return $form;
+}
+function harvest_form_finalstatus_submit($form, &$form_submit) {
+    _harvest_delGuseID();
+    //cleanup users work dir
+    file_unmanaged_delete_recursive(_harvest_getUserWorkDir());
+}
+
+
+/**
+ * Our custom form.
+ */
+function harvest_form($form, &$form_submit) {
+    $filters = array(H_FILTER_EDU => t('Educational'), H_FILTER_BIBLIO => t('Bibliographic'));    
+   
+    $form['manual'] = array(        
+        '#type' => 'fieldset',
+        '#title' => t('Set target information manually'),
+        '#weight' => 5,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+    );
+    $form['manual']['providername'] = array(
+        '#title' => t('Provider Name:'),
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        //'#description' => ' - basedir:' . _harvest_getBaseWFDir() . ' <br>userdir:' . _harvest_getUserWorkDir(),
+        //'#description' => ,
+    );
+    $form['manual']['targeturl'] = array(
+        '#title' => t('Target URL:'),
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        //'#description' => ' - ',
+    );
+    $form['manual']['desc'] = array(
+        '#title' => t('Description:'),
+        '#type' => 'textfield',
+        '#required' => FALSE,
+        //'#description' => ' - ',
+    );
+//    $form['manual']['format'] = array(
+//        '#title' => t('Format Prefix'),
+//        '#type' => 'textfield',
+//        '#required' => TRUE,
+//        //'#description' => ' - ',
+//    );
+    $form['manual']['filter'] = array(
+        '#type' => 'radios',
+        '#title' => t('Filter the target:'),
+        '#options' => $filters,
+        '#required' => TRUE,
+        //'#description' => t('Select a filter.'),      
+    );    
+    $form['manual']['submit'] = array(
+        '#value' => 'Start harvesting!',
+        '#type' => 'submit',
+    );
+    return $form;
+}
+
+function harvest_form_validate($form, &$form_state) {
+//    if ($form_state['values']['input1'] == '-') {
+//        form_set_error('input1', t('Enter a valid input!'));
+//    }
+}
+
+/**
+ * Implements hook_submit.
+ */
+function harvest_form_submit($form, &$form_submit) {
+    try {
+        //_harvest_createWF($form_submit['values']);
+        $guseid = guse_submit(_harvest_getTargetURL(), _harvest_getTargetPass(), _harvest_createWF($form_submit['values']));
+        drupal_set_message(t('Work started!'));
+        _harvest_setGuseID($guseid);
+    } catch (Exception $exc) {
+        drupal_set_message('Error, can not start the work! ' . $exc->getMessage(), 'error');
+        echo $exc->getTraceAsString();
+    }
+}
+
+
+
+/**
+ * Form of ciard ring
+ */
+function harvest_formring($form, &$form_submit) {
+    //ajax example:
+    //https://api.drupal.org/api/examples/ajax_example!ajax_example.module/function/ajax_example_dependent_dropdown/7
+    
+    $filters = array(H_FILTER_EDU => t('Educational'), H_FILTER_BIBLIO => t('Bibliographic'));
+    $empty['']=t('Select filter');
+    $urllist = isset($form_submit['values']['filter']) ? _harvest_ring_getUrlName($form_submit['values']['filter']) : $empty;
+    
+    
+    $form['ring'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Harvest targets from CIARD R.I.N.G.'),
+        '#weight' => 4,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+    );    
+    
+    $form['ring']['filter'] = array(
+        '#type' => 'radios',
+        '#title' => t('STEP1: Filter targets:'),
+        '#options' => $filters,
+        '#required' => TRUE,
+        //'#description' => t('Select a filter.'),
+    '#ajax' => array(
+      // 'event' => 'change',  //this is the default
+      'callback' => 'harvest_dependent_dropdown_selectedurl',
+      'wrapper' => 'dropdown-selectedurl-replace',
+    ),        
+    );
+    
+   $form['ring']['selectedurl'] = array(
+       
+    // The entire enclosing div created here gets replaced when dropdown_first
+    // is changed.
+    '#prefix' => '<div id="dropdown-selectedurl-replace">',
+    '#suffix' => '</div>',       
+       
+    '#type' => 'select',
+    '#title' => t('STEP 2: Select targets matching with the selected filter:'),
+    '#options' => $urllist,//,
+    //'#default_value' => $category['selected'],
+    '#required' => TRUE,
+    //'#description' => t('Select it!'),
+  );
+
+    $form['ring']['submit'] = array(
+        '#value' => 'Start harvesting!',
+        '#type' => 'submit',
+    );
+    return $form;
+}
+
+function harvest_dependent_dropdown_selectedurl($form, $form_state) {
+    $returnform = $form['ring']['selectedurl'];
+    $filter = $form_state['values']['filter'];
+    $returnform['#options'] = _harvest_ring_getUrlName($filter);
+    return $returnform;
+}
+
+
+function harvest_formring_validate($form, &$form_state) {
+//    if ($form_state['values']['input1'] == '-') {
+//        form_set_error('input1', t('Enter a valid input!'));
+//    }
+}
+
+/**
+ * Implements hook_submit.
+ */
+function harvest_formring_submit($form, &$form_submit) {
+    //debug:
+//  $filter = $form_submit['values']['filter'];
+//  $selectedurl=$form_submit['values']['selectedurl'];
+//  drupal_set_message(t('You submitted a wf with filter =  @filter url = @$selectedurl', array('@filter' => $filter, '@$selectedurl' => $selectedurl)));
+
+    try {
+        $guseid = guse_submit(_harvest_getTargetURL(), _harvest_getTargetPass(), _harvest_createWF($form_submit['values']));
+        drupal_set_message(t('Work started!'));
+        _harvest_setGuseID($guseid);
+    } catch (Exception $exc) {
+        drupal_set_message('Error, can not start the work! ' . $exc->getMessage(), 'error');
+        echo $exc->getTraceAsString();
+    }
+}
+
+function _harvest_ring_getSparqlQuery($filter=H_FILTER_NONE) {   
+//filters    
+//edu: 
+//?distro dc:conformsTo <http://ring.ciard.net/node/19271> .
+//biblio:
+//?distro dc:conformsTo <http://ring.ciard.net/node/19244> .
+    
+    $filterquery = '';
+    switch ($filter) {
+        case H_FILTER_EDU:
+            $filterquery = '?distro dc:conformsTo <http://ring.ciard.net/node/19271> .';
+            break;
+        case H_FILTER_BIBLIO:
+            $filterquery = '?distro dc:conformsTo <http://ring.ciard.net/node/19244> .';
+            break;
+        default:
+            break;
+    }
+
+    $format = 'json';
+    $query0 =
+            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dc: <http://purl.org/dc/terms/>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+PREFIX adms: <http://www.w3.org/ns/adms#>
+
+CONSTRUCT { 
+  ?dataset dc:title ?title .
+  ?dataset rdf:type dcat:Dataset .
+  ?dataset dcat:distribution ?distro .
+  ?distro rdf:type dcat:Distribution .
+  ?distro dcat:accessURL ?target .
+}
+WHERE { 
+  ?dataset rdf:type dcat:Dataset .
+  ?dataset dc:title ?title .
+  ?dataset dcat:distribution ?distro .
+  ?distro dcat:accessURL ?target .
+  ?distro adms:representationTechnique <http://ring.ciard.net/taxonomy_term/108> .
+" . $filterquery . "  
+}";
+
+ $query = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX dc: <http://purl.org/dc/terms/>
+PREFIX dcat: <http://www.w3.org/ns/dcat#> 
+PREFIX adms: <http://www.w3.org/ns/adms#> 
+PREFIX doap: <http://usefulinc.com/ns/doap#> 
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+DESCRIBE ?dataset ?distro ?owner ?contact ?topic ?standard ?format ?protocol 
+WHERE { ?dataset rdf:type dcat:Dataset . 
+?dataset dc:title ?title . 
+?dataset dcat:distribution ?distro . 
+?dataset dc:publisher ?owner . 
+?distro dcat:accessURL ?url . 
+?distro adms:representationTechnique <http://ring.ciard.net/taxonomy_term/108> . 
+" . $filterquery . "  
+OPTIONAL { ?dataset doap:maintainer ?contact } 
+OPTIONAL { ?dataset dcat:theme ?topic } 
+OPTIONAL { ?distro dc:conformsTo ?standard } 
+OPTIONAL { ?distro dc:format ?format } 
+OPTIONAL { ?distro adms:representationTechnique ?protocol } }     
+";    
+    
+    $searchUrl = 'http://ring.ciard.net/sparql1?'
+            . 'query=' . urlencode($query)
+            . '&format=' . $format;
+    return $searchUrl;
+}
+
+
+
+    /**
+ * Returns an Array, key = url, value = name
+ * @param type $array
+ * @return type
+ */
+function _harvest_ring_getNameURLDataset($array) {
+    //The name of the dataset is in records of rdf:type <http://www.w3.org/ns/dcat#Dataset> in the dc:title (ns1:title) property; 
+    //the target in records of rdf:type <http://www.w3.org/ns/dcat#Distribution> in the related dcat:accessURL (ns5:accessURL) property 
+    //(the relation between the two records is in the dcat:Dataset record’s dcat:distribution property.
+    $P_DISTRIBUTION = 'http://www.w3.org/ns/dcat#distribution';
+    $P_ACCESSURL = 'http://www.w3.org/ns/dcat#accessURL';
+    $P_TITLE = 'http://purl.org/dc/terms/title';
+
+    $dataset[''] =''; 
+    //$retValue = "";
+    if (is_array($array)) {
+        //$retValue = $retValue . "<br/>";
+        foreach (array_keys($array) as $key) {
+            //$retValue = $retValue . "<br/><strong>" . $key . "</strong>";
+            if (isset($array[$key][$P_DISTRIBUTION])) {
+                $urlInItem = $array[$key][$P_DISTRIBUTION][0]["value"];
+                //$retValue.= "here:" . $urlInItem;
+                if (isset($urlInItem)) {
+                    $accessURL = $array[$urlInItem][$P_ACCESSURL][0]['value'];
+                    $name = $array[$key][$P_TITLE][0]["value"];
+                    //$retValue.='SET, url=' . $accessURL . " name= " . $name;
+                    $dataset[$accessURL] = $name;
+                } //else {$retValue.='NOTSET';}
+            }
+        }
+    }
+    //echo $retValue;
+    return $dataset;
+}
+
+/**
+ * returns the url- name list. It uses cache.
+ * @param type $filter
+ * @return type
+ */
+function _harvest_ring_getUrlName($filter = H_FILTER_BIBLIO) {
+    //cache:
+    //http://www.lullabot.com/blog/article/beginners-guide-caching-data-drupal-7
+    //cache_clear_all('_harvest', 'cache', TRUE);
+
+
+    switch ($filter) {
+        case H_FILTER_EDU:
+            $urlNameEdu = &drupal_static(__FUNCTION__);
+            if (!isset($urlNameEdu)) {
+                if ($cache = cache_get('_harvest_urlNameEdu')) {
+                    $urlNameEdu = $cache->data;
+                    //drupal_set_message("EDU From db CACHE");
+                } else {
+                    $requestURL = _harvest_ring_getSparqlQuery(H_FILTER_EDU);
+                    $response = _harvest_request($requestURL);
+                    $responseArray = json_decode($response, true);
+                    $urlNameEdu = _harvest_ring_getNameURLDataset($responseArray);
+                    cache_set('_harvest_urlNameEdu', $urlNameEdu, 'cache', time() + _harvest_getringcache()); //sec
+                    //drupal_set_message("EDU From NO CACHE");
+                }
+            } else {
+                //drupal_set_message("EDU From static CACHE");
+            }
+            return $urlNameEdu;
+
+            break;
+        case H_FILTER_BIBLIO:
+            $urlNameBiblio = &drupal_static(__FUNCTION__);
+            if (!isset($urlNameBiblio)) {
+                if ($cache = cache_get('_harvest_urlNameBiblio')) {
+                    $urlNameBiblio = $cache->data;
+                    //drupal_set_message("BIBLIO From db CACHE");
+                } else {
+                    $requestURL = _harvest_ring_getSparqlQuery(H_FILTER_BIBLIO);
+                    $response = _harvest_request($requestURL);
+                    $responseArray = json_decode($response, true);
+                    $urlNameBiblio = _harvest_ring_getNameURLDataset($responseArray);
+                    cache_set('_harvest_urlNameBiblio', $urlNameBiblio, 'cache', time() + 10); //sec
+                    //drupal_set_message("BIBLIO From NO CACHE");
+                }
+            } else {
+                //drupal_set_message("BIBLIO From static CACHE");
+            }
+
+            return $urlNameBiblio;
+
+            break;
+        default:
+            break;
+    }
+}
+
+// END formring
+
+/**
+ * HTTP request
+ * @param type $url
+ * @return type
+ */
+function _harvest_request($url) {
+    if (!function_exists('curl_init')) {
+        throw new Exception('CURL is not installed!');
+    }
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    //return response, don't print/echo
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return $response;
+}
+
+function _harvest_getGuseID() {
+    global $user;
+    $user->uid;
+    $result = db_select('harvest_prop', 'value')
+            ->fields('value')
+            ->condition('uid', $user->uid, '=')
+            ->condition('type', 'guseid', '=')
+            ->execute()
+            ->fetchAssoc();
+
+    return $result['value'];
+    //return variable_get('guseid');
+}
+
+function _harvest_setGuseID($guseid) {
+    //variable_set('guseid', trim($guseid));
+    //drupal_set_message(t('$guseid: ') . $guseid);
+    global $user;
+    _harvest_delGuseID();
+    $nid = db_insert('harvest_prop')
+            ->fields(array(
+                'uid' => $user->uid,
+                'type' => 'guseid',
+                'value' => $guseid,
+            ))
+            ->execute();
+}
+
+function _harvest_delGuseID() {
+    //variable_del('guseid');
+    global $user;
+    $num_deleted = db_delete('harvest_prop')
+            ->condition('uid', $user->uid, '=')
+            ->condition('type', 'guseid', '=')
+            ->execute();
+}
+
+/**
+ * 
+ * @global type $user
+ * @return type
+ */
+function _harvest_getUserWorkDir() {
+    global $user;
+    // variable_get('file_public_path', conf_path() . '/files/harvest/') //returns sites/default/files/harvest/
+    return drupal_realpath(file_default_scheme() . '://') . '/harvest/' . $user->uid . '/';
+}
+
+/**
+ * Base dir of the harvest workflow parts
+ * @return type
+ */
+function _harvest_getBaseWFDir() {
+    //return '/var/www/test/remotewf/'.'wf/';
+    return getcwd() . '/' . drupal_get_path('module', 'harvest') . '/wf/';
+}
+
+function _harvest_getTargetURL() {
+    if (!variable_get('harvest_guseremoteurl')) {
+        throw new Exception('Module is not configured!');
+    }
+    return variable_get('harvest_guseremoteurl'); //'http://192.168.152.5:8080/wspgrade/RemoteServlet';
+}
+
+function _harvest_getTargetPass() {
+    return variable_get('harvest_gusepass');
+}
+
+
+
+function _harvest_progress($progress){
+    //http://www.enterana.com/blog/web-development/simple-progress-bar-css
+    drupal_add_css('    #h-progress-wrapper {
+  border: 1px solid #567433;
+  background-color: transparent;
+  width: 200px;
+  height: 16px;
+}
+#h-progress-value {
+  background: #b9cb3d repeat-x;
+  height: 16px;
+}', 'inline');
+
+    $style='display: none';
+    if (is_numeric($progress) && $progress > 0 && $progress <= 100) {
+        $style = "width: " . round($progress) . "%; display: block";
+    }
+    
+    return '<div id="h-progress-wrapper"><div id="h-progress-value" style="'.$style.'"></div></div>';
+}
+
+/**
+ * 
+ * @param type $info
+ * @return Array[]= Array['progress'] = HTML progress bar; Array['detail'] = HTML detailed info  
+ */
+function _harvest_getdetail($info){
+    //$maxjob=5;
+    $oneslice=12;
+    $finished=0;
+    $running=0;
+    $init=0;
+    $ret='<table><tr><th>Job name</th><th>Init</th><th>Running</th><th>Finished</th><th>Error</th> </tr>';
+    //$info='status=finished;Init:init=0:running=0:finished=1:error=0;Harvest:init=0:running=0:finished=1:error=0;UploadDataSet:init=0:running=0:finished=1:error=0;RegisterDataSet:init=0:running=0:finished=1:error=0;getHTTP:init=0:running=0:finished=1:error=0;';
+    $st = explode(";", $info);
+    //Init Harvest UploadDataSet RegisterDataSet getHTTP
+    foreach ($st as $key => $value) {
+        if ($key == 0 ) continue;// skip wf status
+        if (trim($value) == '')  continue; //skip last empty entry
+        $job=explode(":",$value);        
+        $ret.='<tr><td>'.$job[0].'</td>';//job name
+        for ($index = 1; $index < count($job); $index++) {            
+            $status=explode("=",$job[$index]);
+            $ret.='<td>'.$status[1].'</td>';//$job[$index]
+            switch ($status[0]) {
+                case 'init':
+                    $init+=$status[1];
+                    break;
+                case 'running':
+                    $running+=$status[1];
+                    break;
+                case 'finished':
+                    $finished+=$status[1];
+                    break;
+                case 'error':
+                    $finished+=$status[1];
+                    break;
+                default:
+                    break;
+            }
+        }
+        $ret.='</tr>';
+    }
+    
+    $ret.="</table>Number of finished jobs: $finished ";//$init $running $finished <br/>$info
+    $percent = $oneslice*$finished;
+    
+    $r['progress']=_harvest_progress($percent).' Currently harvesting process is '.$st[0].'.<br/> Approximately '.$percent.' % has been finished';
+    $r['detail']=$ret;
+    return $r;
+    
+}
+
+
+/**
+ * 
+ * @param type $formvalues = $form_submit['values']
+ * @return string
+ * @throws Exception
+ */
+function _harvest_createWF($formvalues) {
+
+    if (!extension_loaded('zip')) {
+        drupal_set_message('zip extension is not loaded!', 'error');
+        throw new Exception('zip extension is not loaded!');
+    }
+
+    $userdir = _harvest_getUserWorkDir();
+    $wfpartsbasedir = _harvest_getBaseWFDir();
+
+    //cleanup
+    file_unmanaged_delete_recursive($userdir);
+
+    if (!mkdir($userdir, 0777, true)) {
+        drupal_set_message('Failed to create temp folders...', 'error');
+        throw new Exception('Failed to create temp folders...');
+    }
+
+    $zip = new _guse_ZipArchive();
+    $filename = $userdir . "wf.zip";
+
+    if ($zip->open($filename, ZipArchive::CREATE) !== TRUE) {
+        drupal_set_message('Can not create file.', 'error');
+        throw new Exception('Can not create file.');
+    }
+
+    $zip->addDirRecursive($wfpartsbasedir . H_WFNAME, H_WFNAME);
+    $zip->addFile($wfpartsbasedir . 'workflow.xml', 'workflow.xml');
+    $zip->addFromString(H_WFNAME."/Init/inputs/0/0", _harvest_init0($formvalues));
+    $zip->addFromString(H_WFNAME."/Init/inputs/2/0", _harvest_init2($formvalues));
+
+    $zip->close();
+    return $filename;
+}
+
+/**
+ * Returns the generated content of the INIT/0 input file.
+ * example:
+ * {
+ *   "name":"JME Collections",
+ *   "desc":"Jura - Museum Eichstatt",
+ *   "frequency":24,
+ *   "type":"oai_lom",
+ *   "url":"http://jme.collections.natural-europe.eu/oai/"
+ * }
+ * 
+ * @param type $formvalues = $form_submit['values']
+ * @return string
+ */
+function _harvest_init0($formvalues) {
+    $url = '';
+    if (isset($formvalues['selectedurl'])) {//url from ring
+        $url = $formvalues['selectedurl'];
+    } else {//manual url input 
+        $url = $formvalues['targeturl'];
+    }
+    $name = '';
+    if (isset($formvalues['providername'])) {
+        $name = $formvalues['providername'];
+    }
+    $desc = '';
+    if (isset($formvalues['desc'])) {
+        $desc = $formvalues['desc'];
+    }
+    $reqFormat = '';
+    $format = '';
+    switch ($formvalues['filter']) {
+        case H_FILTER_EDU:
+            $reqFormat = 'EDU';
+            $format = 'oai_lom';
+            break;
+        case H_FILTER_BIBLIO:
+            $reqFormat = 'BIB';
+            $format = 'oai_agris';
+            break;
+        default:
+            break;
+    }    
+    
+    return '{
+   "name":"' . $name . '",
+   "desc":"' . $desc . '",
+   "frequency":24,
+   "type":"' . $format . '",
+   "url":"' . $url . '"
+}
+
+';
+}
+
+/**
+ * Returns the generated content of the INIT/2 input file.
+ * example:
+ * {
+ *  "providerName":"JME Collections",
+ *  "format":"ne",
+ *  "targetFile":"target.json",
+ *  "max":"10",
+ *  "datasetRemotePath":"lfn:/grid/vo.aginfra.eu/balasko/dataset7/"
+ * }
+ *
+ * @param type $formvalues = $form_submit['values']
+ * @return string
+ */
+function _harvest_init2($formvalues) {
+    $providerName = '';
+    if (isset($formvalues['providername'])) {
+        $providerName = $formvalues['providername'];
+    }
+    $reqFormat = '';
+    $format = '';
+    switch ($formvalues['filter']) {
+        case H_FILTER_EDU:
+            $reqFormat = 'EDU';
+            $format = 'oai_lom';
+            break;
+        case H_FILTER_BIBLIO:
+            $reqFormat = 'BIB';
+            $format = 'oai_agris';
+            break;
+        default:
+            break;
+    }
+
+    return '{
+  "providerName":"' . $providerName . '",
+  "format":"' . $format . '",
+  "targetFile":"target.json",
+  "max":"10",
+  "reqFormat":"' . $reqFormat . '",
+  "datasetRemotePath":"lfn:/grid/vo.aginfra.eu/balasko/dataset7/"
+}
+
+';
+}
+
+function _harvest_getFinalOutString($outputzip) {
+    $outputdir = _harvest_getUserWorkDir() . 'output/';
+    $zip = new ZipArchive;
+    if ($zip->open($outputzip) === TRUE) {
+        if (!file_exists($outputdir)) {
+            $zip->extractTo($outputdir);
+        }
+        
+        $zip->close();
+        //drupal_set_message('extract ok');
+
+        // /output/HarvestUploadRegister02_2013-10-29-153354/getHTTP/outputs/7952037289578763zentest/0
+        $dir1 = opendir($outputdir);
+        while (false !== ($file = readdir($dir1))) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($outputdir . $file)) {
+                $wfdir = $file; //get WF id
+                break;
+            }
+        }
+        $outputdir.=$wfdir . '/getHTTP/outputs/';
+        //drupal_set_message('output file1:' . $outputdir);
+
+        $dir2 = opendir($outputdir);
+        while (false !== ($file = readdir($dir2))) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($outputdir . $file)) {
+                $wfrtdir = $file; //get runtimeid
+                break;
+            }
+        }
+     
+        $json_correct=json_decode(file_get_contents($outputdir.$wfrtdir . '/0/metadataCorrect.json'),true);       
+        $url_correct = $json_correct['dataset']['http_dataset_location'];
+        
+        $json_wrong=json_decode(file_get_contents($outputdir.$wfrtdir . '/0/metadataWrong.json'),true);       
+        $url_wrong = $json_wrong['dataset']['http_dataset_location'];    
+        
+        return 'Records transformed <font style="color:#567433;"><b>correctly</b></font>: <a href="'.$url_correct.'">'.$url_correct.'</a><br/>Records<font style="color:red;"><b> could not</b></font> be transformed:<a href="'.$url_wrong.'">'.$url_wrong.'</a><br/>';                
+    } else {
+        return 'Extract failed.';
+    }
+}
+
+function _harvest_getFinalErrorString($outputzip) {
+    $outputdir = _harvest_getUserWorkDir() . 'output/';
+    $zip = new ZipArchive;
+    if ($zip->open($outputzip) === TRUE) {
+        if (!file_exists($outputdir)) {
+            $zip->extractTo($outputdir);
+        }
+        
+        $zip->close();
+        //drupal_set_message('extract ok');
+
+        
+        $dir1 = opendir($outputdir);
+        while (false !== ($file = readdir($dir1))) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($outputdir . $file)) {
+                $wfdir = $file; //get WF id
+                break;
+            }
+        }
+        
+        //check harvester: "No outputs."
+        // userid/output/Harvest/outputs/16661047476719763zentest/0/stdout.log
+        $outputdir.=$wfdir . '/Harvest/outputs/';
+        //drupal_set_message('output file1:' . $outputdir);
+
+        $dir2 = opendir($outputdir);
+        while (false !== ($file = readdir($dir2))) {
+            if ($file == '.' || $file == '..') {
+                continue;
+            }
+            if (is_dir($outputdir . $file)) {
+                $wfrtdir = $file; //get runtimeid
+                break;
+            }
+        }
+     
+        $harveststdout = $outputdir.$wfrtdir . '/0/stdout.log';
+        if (file_exists($harveststdout)) {
+            $str = file_get_contents($harveststdout);
+            if (strpos($str, 'No outputs.') !== FALSE){
+                drupal_set_message(t('Unfortunatelly the harvesting was failed. Possible reason: no metadata found in the target with the given form.'), 'error');
+            }
+        }
+
+        return '';                
+    } else {
+        return 'Extract failed.';
+    }
+}

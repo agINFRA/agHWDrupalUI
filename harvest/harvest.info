@@ -1,0 +1,6 @@
+name = Harvest 
+description = Configure and execute Harvest workflow using gUSE/Remote API
+core = 7.x 
+dependencies[] = guse
+version = 1.0
+package = gUSE

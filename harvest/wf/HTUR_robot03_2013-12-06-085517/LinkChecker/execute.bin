@@ -1,0 +1,33 @@
+#!/bin/sh
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+mkdir ./inputs
+mkdir ./success
+mkdir ./wrong
+
+mv inputs.tgz ./inputs
+cd inputs
+tar xvzf ./inputs.tgz
+cd ..
+
+echo "=============EXECUTION=============="
+${VO_VO_AGINFRA_EU_SW_DIR}/agJRE-1.7.0-17/bin/java -jar ${VO_VO_AGINFRA_EU_SW_DIR}/agLinkCheck-1.0.0/agLinkCheck-1.0.0.jar -errorFolder ./wrong -format akif -mode live -rootFolder ./inputs -successFolder ./success -rulesPath ./rules.txt
+echo "========EXECUTION FINISHED=========="
+ls -l
+echo "=================INPUTS============="
+ls -l ./inputs
+echo "================SUCCESS============="
+ls -l ./success
+echo "===============BAD=================="
+ls -l ./wrong
+cd ./success
+tar cvzf ./../success.tgz .
+cd ..
+
+cd ./wrong
+tar cvzf ./../wrong.tgz .
+cd ..
+
+echo "EXECUTION_ENDTIME:" `date +%s`

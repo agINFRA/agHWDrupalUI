@@ -1,0 +1,5 @@
+name = gUSE 
+description = Use gUSE/Remote API functions
+core = 7.x 
+version = 0.1
+package = gUSE

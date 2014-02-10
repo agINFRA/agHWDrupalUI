@@ -1,0 +1,1 @@
+1, prodinra.inra.fr, 302, #location.url.startsWith('http://prodinra.inra.fr/record/') and #location.redirectsToUrl.startsWith('http://prodinra.inra.fr/?locale=fr#!ConsultNotice'), 200

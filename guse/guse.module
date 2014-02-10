@@ -1,0 +1,208 @@
+<?php
+
+/**
+ * @file
+ * gUSE/Remote API
+ * Call gUSE remote api functions, submit a workflow, get status, and get outputs.
+ */
+
+
+
+/**
+ * Implements hook_help.
+ */
+function guse_help($path, $arg) {
+    if ($path == 'admin/help#guse') {
+        return t('gUSE remote api module provides access to gUSE remote api. 
+            In this version the following functions are supported: submit, info, detailsinfo, download. 
+            For more information see: RemoteAPI_Usage.pdf on guse.sourceforge.net or check the comments.');
+    }
+}
+
+/**
+ * Use for WF creation.
+ */
+class _guse_ZipArchive extends ZipArchive {
+// based on: http://ninad.pundaliks.in/blog/2011/05/recursively-zip-a-directory-with-php/
+    /**
+     * Add a Directory recursive
+     * @param string $location Real Location
+     * @param string $name Name in Archive
+     * */
+    public function addDirRecursive($location, $name) {
+        $this->addEmptyDir($name);
+
+        $this->addDirRec($location, $name);
+    }
+
+    private function addDirRec($location, $name) {
+        $name .= '/';
+        $location .= '/';
+        $dir = opendir($location);
+        while (false !== ($file = readdir($dir))) {
+            if ($file == '.' || $file == '..')
+                continue;
+            $do = (is_dir($location . $file) ) ? 'addDirRecursive' : 'addFile';
+            $this->$do($location . $file, $name . $file);
+        }
+    }
+
+}
+
+
+/**
+ * Calls the submit function of the remote api in submission mode #2 (Use real gUSE workflow.zip without certificates)
+ * @param type $url Url of the remote api servlet.
+ * @param type $pass Password for remote api.
+ * @param type $gusewf Full path and filename of workflow.zip
+ * @return type Returns the guse ID, or throws Exception.
+ * @throws Exception
+ */
+function guse_submit($url, $pass, $gusewf) {
+    guse_cURLcheckFunctions();
+    
+    //Files needs the full path and a @ sign before the filename!
+    $post = array('m' => 'submit', 'pass' => $pass, 'gusewf' => '@' . $gusewf);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //curl_exec will return the response, not true/false
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    $result = curl_exec($ch);
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($http_status !== 200) {
+        throw new Exception('Failed to achieve gUSE. Is the Remote URL correct? status code: ' . $http_status);
+    }
+    $guseid = trim($result);
+    if ($guseid == '') {//bad pass?
+        throw new Exception('Is the admin password correct?');
+    } elseif ($guseid == 'FALSE') {//bad WF?
+        throw new Exception('Is the configured workflow correct?');
+    }
+    return $guseid;
+}
+
+/**
+ * Calls the info function of the remote api
+ * @param type $url Url of the remote api servlet.
+ * @param type $pass Password for remote api.
+ * @param type $guseid ID of the running workflow. (Returned after submit.)
+ * @return type Returns the WF status
+ * 
+ * WFstatus can be: 
+ * - submitted: Indicates that the workflow has been sent to run but still not running;
+ * - running: A workflow process has already begun;
+ * - finished: A workflow successfully completed;
+ * - error: An error occurred;
+ * - suspended: A workflow running was stopped by administrator;
+ * - not valid data: A gUSE system error.
+ */
+function guse_getinfo($url, $pass, $guseid) {
+    //Files needs the full path and a @ sign before the filename!    
+    $post = array('m' => 'info', 'pass' => $pass, 'ID' => $guseid);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //curl_exec will return the response, not true/false
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+
+/**
+ * Calls the detailsinfo function of the remote api
+ * @param type $url Url of the remote api servlet.
+ * @param type $pass Password for remote api.
+ * @param type $guseid ID of the running workflow. (Returned after submit.)
+ * @return type Returns the WF and job statuses
+ * 
+ * eg.: WFstatus;JOB1name:STATUS1=0:STATUS2=1;JOB2name:STATUS1=0:STATUS2=1;
+ *
+ * WFstatus can be: 
+ * - submitted: Indicates that the workflow has been sent to run but still not running;
+ * - running: A workflow process has already begun;
+ * - finished: A workflow successfully completed;
+ * - error: An error occurred;
+ * - suspended: A workflow running was stopped by administrator;
+ * - not valid data: A gUSE system error.
+ * 
+ * STATUSx is a job status that can be:
+ * - init: A job is initialized in the wf interpreter;
+ * - running: A job has been sent to the submitter;
+ * - finished: A job successfully completed;
+ * - error: A job failed.
+ *
+ * Number: Indicates how many job instances are in the specified job status. (As the end user interface shows)
+ */
+function guse_getdetailsinfo($url, $pass, $guseid) {
+    //Files needs the full path and a @ sign before the filename!    
+    $post = array('m' => 'detailsinfo', 'pass' => $pass, 'ID' => $guseid);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //curl_exec will return the response, not true/false
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    return $result;
+}
+
+/**
+ * Calls the download function of the remote api
+ * @param type $url Url of the remote api servlet.
+ * @param type $pass Password for remote api.
+ * @param type $guseid ID of the running workflow. (Returned after submit.)
+ * @param type $outputFile Full path and filename of the output file.
+ * @return boolean
+ * @throws Exception
+ */
+function guse_download($url, $pass, $guseid, $outputFile) {
+    $post = array('m' => 'download', 'pass' => $pass, 'ID' => $guseid);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    if ($ch) {
+        $fp = fopen($outputFile, "w");
+        if ($fp) {
+            if (!curl_setopt($ch, CURLOPT_URL, $url)) {
+                fclose($fp); // to match fopen()
+                curl_close($ch); // to match curl_init()
+                throw Exception("FAIL: curl_setopt(CURLOPT_URL)");
+            }
+            if (!curl_setopt($ch, CURLOPT_FILE, $fp))
+                throw Exception("FAIL: curl_setopt(CURLOPT_FILE)");
+            if (!curl_setopt($ch, CURLOPT_HEADER, 0))
+                throw Exception("FAIL: curl_setopt(CURLOPT_HEADER)");
+            if (!curl_exec($ch))
+                throw Exception("FAIL: curl_exec()");
+            curl_close($ch);
+            fclose($fp);
+            return TRUE;
+        }
+        else
+            throw Exception("FAIL: fopen()");
+    }
+    else
+        throw Exception("FAIL: curl_init()");
+}
+
+/**
+ * Checks the necessary curl functions.
+ * @return boolean
+ * @throws Exception
+ */
+function guse_cURLcheckFunctions() {
+    if (!function_exists("curl_init") &&
+            !function_exists("curl_setopt") &&
+            !function_exists("curl_exec") &&
+            !function_exists("curl_close"))
+        throw new Exception("The following functions are missing: curl_init, curl_setopt, curl_exec, curl_close. Use the following command:" .
+        "<br/> sudo apt-get install curl libcurl3 libcurl3-dev php5-curl");
+    else
+        return true;
+}

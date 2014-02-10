@@ -1,0 +1,33 @@
+#!/bin/sh 
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+mkdir ./inputs
+#mkdir ./outputs
+mkdir ./bad
+
+mv inputs.tgz ./inputs
+cd inputs
+tar xvzf ./inputs.tgz
+cd ..
+#mv ./record.xml ./inputs
+export ZETTA_LANGUAGE_PROFILE_FOLDER=.
+SET=`cat providerName.txt`
+unzip application.zip
+export CLASSPATH=$CLASSPATH:`pwd`/lib
+
+echo "==========EXECUTION STARTED ============="
+date
+java -jar agris2agrif.jar -input ./inputs -output ./outputs -bad ./bad -set $SET
+
+echo "==========EXECUTION FINISHED ============"
+
+cd ./outputs
+tar cvzf ./../success.tgz .
+cd ..
+cd ./bad
+tar cvzf ./../wrong.tgz .
+cd ..
+
+echo "EXECUTION_ENDTIME:" `date +%s`

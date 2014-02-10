@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+tar xvzf application.tgz
+export CLASSPATH=$CLASSPATH:`pwd`/lib
+java -jar initharvester.jar basicInfo.json
+
+echo "EXECUTION_ENDTIME:" `date +%s`

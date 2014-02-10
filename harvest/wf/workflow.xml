@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<workflow download="all" export="proj" mainabst="" maingraf="HarvestTransformUploadRegister10_2013-12-06-085517" mainreal="HTUR_robot03_2013-12-06-085517" name="HTUR_robot03_2013-12-06-085517">
+   <graf name="HarvestTransformUploadRegister10_2013-12-06-085517" text="Description of Graph">
+      <job name="Init" text="Description of Job" x="18" y="100">
+         <input name="target.json" prejob="" preoutput="" seq="0" text="Description of Port" x="17" y="85"/>
+         <input name="initharvester.jar" prejob="" preoutput="" seq="1" text="Description of Port" x="33" y="85"/>
+         <input name="basicInfo.json" prejob="" preoutput="" seq="2" text="Description of Port" x="48" y="85"/>
+         <output name="key.txt" seq="3" text="Description of Port" x="78" y="99"/>
+         <output name="target.txt" seq="4" text="Description of Port" x="78" y="130"/>
+         <output name="max.txt" seq="5" text="Description of Port" x="64" y="85"/>
+         <output name="timestamp.txt" seq="6" text="Description of Port" x="64" y="160"/>
+         <output name="providerName.txt" seq="7" text="Description of Port" x="78" y="146"/>
+         <output name="datasetRemotePath.txt" seq="8" text="Description of Port" x="48" y="160"/>
+         <output name="reqformat.txt" seq="9" text="Description of Port" x="78" y="115"/>
+      </job>
+      <job name="Harvest" text="Description of Job" x="226" y="10">
+         <input name="key.txt" prejob="Init" preoutput="3" seq="0" text="Description of Port" x="225" y="70"/>
+         <input name="target.txt" prejob="Init" preoutput="4" seq="1" text="Description of Port" x="211" y="56"/>
+         <input name="max.txt" prejob="Init" preoutput="5" seq="2" text="Description of Port" x="211" y="40"/>
+         <input name="application.tgz" prejob="" preoutput="" seq="3" text="Description of Port" x="272" y="-5"/>
+         <output name="outputs.tgz" seq="4" text="Description of Port" x="272" y="70"/>
+      </job>
+      <job name="UploadDataSet" text="Description of Job" x="158" y="334">
+         <input name="oairecord.xml" prejob="LinkChecker" preoutput="1" seq="0" text="Description of Port" x="218" y="364"/>
+         <input name="target.txt" prejob="Init" preoutput="4" seq="1" text="Description of Port" x="157" y="319"/>
+         <input name="providerName.txt" prejob="Init" preoutput="7" seq="2" text="Description of Port" x="188" y="319"/>
+         <input name="timestamp.txt" prejob="Init" preoutput="6" seq="3" text="Description of Port" x="173" y="319"/>
+         <input name="datasetRemotePath.txt" prejob="Init" preoutput="8" seq="4" text="Description of Port" x="143" y="333"/>
+         <input name="jsonTemplate.json" prejob="" preoutput="" seq="5" text="Description of Port" x="218" y="380"/>
+         <input name="Toairecord.xml" prejob="AGRIS2AGRIF" preoutput="2" seq="7" text="Description of Port" x="204" y="319"/>
+         <input name="wrong.tgz" prejob="AGRIS2AGRIF" preoutput="3" seq="8" text="Description of Port" x="218" y="333"/>
+         <input name="LCwrong" prejob="LinkChecker" preoutput="2" seq="9" text="Description of Port" x="218" y="349"/>
+         <output name="dataset.json" seq="6" text="Description of Port" x="157" y="394"/>
+      </job>
+      <job name="RegisterDataSet" text="Description of Job" x="79" y="441">
+         <input name="outputLFN.txt" prejob="UploadDataSet" preoutput="6" seq="0" text="Description of Port" x="125" y="426"/>
+         <output name="result" seq="1" text="Description of Port" x="139" y="440"/>
+      </job>
+      <job name="getHTTP" text="Description of Job" x="231" y="441">
+         <input name="result.json" prejob="RegisterDataSet" preoutput="1" seq="0" text="Description of Port" x="216" y="440"/>
+         <input name="metadataRetriever" prejob="" preoutput="" seq="2" text="Description of Port" x="246" y="426"/>
+         <output name="metadataWrong.json" seq="1" text="Description of Port" x="261" y="426"/>
+         <output name="metadataCorrect.json" seq="3" text="Description of Port" x="277" y="426"/>
+      </job>
+      <job name="LOM2AKIF" text="Description of Job" x="325" y="116">
+         <input name="inputs.tgz" prejob="Harvest" preoutput="4" seq="0" text="Description of Port" x="324" y="101"/>
+         <input name="reqformat.txt" prejob="Init" preoutput="9" seq="1" text="Description of Port" x="310" y="115"/>
+         <input name="PORT2" prejob="Init" preoutput="7" seq="2" text="Description of Port" x="310" y="146"/>
+         <output name="wrong.tgz" seq="3" text="Description of Port" x="371" y="101"/>
+         <output name="correct.tgz" seq="4" text="Description of Port" x="340" y="176"/>
+      </job>
+      <job name="LinkChecker" text="Description of Job" x="297" y="323">
+         <input name="PORT0" prejob="LOM2AKIF" preoutput="4" seq="0" text="Description of Port" x="343" y="308"/>
+         <input name="rules.txt" prejob="" preoutput="" seq="3" text="Description of Port" x="296" y="308"/>
+         <output name="success.tgz" seq="1" text="Description of Port" x="282" y="369"/>
+         <output name="wrong.tgz" seq="2" text="Description of Port" x="282" y="353"/>
+      </job>
+      <job name="AGRIS2AGRIF" text="Description of Job" x="209" y="228">
+         <input name="inputs.tgz" prejob="Harvest" preoutput="4" seq="0" text="Description of Port" x="255" y="213"/>
+         <input name="reqformat.txt" prejob="Init" preoutput="9" seq="1" text="Description of Port" x="194" y="227"/>
+         <input name="application.tgz" prejob="" preoutput="" seq="4" text="Description of Port" x="239" y="213"/>
+         <input name="PORT5" prejob="Init" preoutput="7" seq="5" text="Description of Port" x="208" y="213"/>
+         <output name="success.tgz" seq="2" text="Description of Port" x="208" y="288"/>
+         <output name="wrong.tgz" seq="3" text="Description of Port" x="224" y="288"/>
+      </job>
+   </graf>
+   <real abst="" graf="HarvestTransformUploadRegister10_2013-12-06-085517" name="HTUR_robot03_2013-12-06-085517" text="2013-12-5">
+      <job name="AGRIS2AGRIF" text="Description of Job" x="209" y="228">
+         <input name="inputs.tgz" prejob="Harvest" preoutput="4" seq="0" text="Description of Port" x="255" y="213">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="inputs.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="reqformat.txt" prejob="Init" preoutput="9" seq="1" text="Description of Port" x="194" y="227">
+            <port_prop desc="null" inh="null" key="pequalvalue" label="null" value="BIB"/>
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="reqFormat.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="1"/>
+         </input>
+         <input name="application.tgz" prejob="" preoutput="" seq="4" text="Description of Port" x="239" y="213">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/0"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="application.zip"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="4"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="PORT5" prejob="Init" preoutput="7" seq="5" text="Description of Port" x="208" y="213">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="providerName.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="5"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="success.tgz" seq="2" text="Description of Port" x="208" y="288">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="success.tgz"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="wrong.tgz" seq="3" text="Description of Port" x="224" y="288">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="wrong.tgz"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="local"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="dci-bridge host(64bit)"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <history mdyid="new.input.intname" nvalue="providerName.txt" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="5" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="application.zip" ovalue="application.tgz" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.pequaltype" nvalue="1" ovalue="0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequalvalue" nvalue="BIB" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="reqFormat.txt" ovalue="reqformat.txt" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="reqformat.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.pequaltype" nvalue="1" ovalue="0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequalvalue" nvalue="agris_ap" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="success.tgz" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="4" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="application.tgz" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="key.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="inputs.tgz" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="dci-bridge host(64bit)" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="local" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="getHTTP" text="Description of Job" x="231" y="441">
+         <input name="result.json" prejob="RegisterDataSet" preoutput="1" seq="0" text="Description of Port" x="216" y="440">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="result.json"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="metadataRetriever" prejob="" preoutput="" seq="2" text="Description of Port" x="246" y="426">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/application.tgz"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="application.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="metadataWrong.json" seq="1" text="Description of Port" x="261" y="426">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="metadataWrong.json"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="metadataCorrect.json" seq="3" text="Description of Port" x="277" y="426">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="metadataCorrect.json"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="local"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="dci-bridge host(64bit)"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="metadataCorrect.json" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="metadataWrong.json" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/application.tgz" ovalue="C:/fakepath/0" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waiting" nvalue="all" ovalue="one" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waitingtmp" nvalue="all" ovalue="one" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="1" ovalue="0" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="application.tgz" ovalue="metadataRetriever" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="result.json" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="metadataRetriever" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="2" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="local" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="dci-bridge host(64bit)" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="Harvest" text="Description of Job" x="226" y="10">
+         <input name="key.txt" prejob="Init" preoutput="3" seq="0" text="Description of Port" x="225" y="70">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="key.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="target.txt" prejob="Init" preoutput="4" seq="1" text="Description of Port" x="211" y="56">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="target.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="max.txt" prejob="Init" preoutput="5" seq="2" text="Description of Port" x="211" y="40">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="max.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="application.tgz" prejob="" preoutput="" seq="3" text="Description of Port" x="272" y="-5">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/0"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="application.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="3"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="outputs.tgz" seq="4" text="Description of Port" x="272" y="70">
+            <port_prop desc="null" inh="null" key="intname" label="null" value="outputs.tgz"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="robotjobbundle" label="null" value="10902:#:HTUR_robot03_2013-12-06-085517:#:Harvest:#:47342909-9d17-4210-8d64-f33892fa954c"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="glite"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="vo.aginfra.eu"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <description key="glite.keyrequirements" value="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot03_2013-12-06-085517:#:Harvest:#:47342909-9d17-4210-8d64-f33892fa954c" ovalue="" port="-" tim="2013-12-06-09:29:42" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.job.gridtype" nvalue="glite" ovalue="local" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.job.grid" nvalue="vo.aginfra.eu" ovalue="dci-bridge host(64bit)" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="application.tgz" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="3" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="2" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="max.txt" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="target.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="key.txt" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="local" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="dci-bridge host(64bit)" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="Init" text="Description of Job" x="18" y="100">
+         <input name="target.json" prejob="" preoutput="" seq="0" text="Description of Port" x="17" y="85">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/target.json_lom"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="target.json"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="initharvester.jar" prejob="" preoutput="" seq="1" text="Description of Port" x="33" y="85">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/application.tgz"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="application.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="basicInfo.json" prejob="" preoutput="" seq="2" text="Description of Port" x="48" y="85">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/basicinfo.json_lom"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="basicInfo.json"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="key.txt" seq="3" text="Description of Port" x="78" y="99">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="key.txt"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="target.txt" seq="4" text="Description of Port" x="78" y="130">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="target.json"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="max.txt" seq="5" text="Description of Port" x="64" y="85">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="max.txt"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="timestamp.txt" seq="6" text="Description of Port" x="64" y="160">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="timestamp.txt"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="providerName.txt" seq="7" text="Description of Port" x="78" y="146">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="providerName.txt"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="datasetRemotePath.txt" seq="8" text="Description of Port" x="48" y="160">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="datasetRemotePath.txt"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="reqformat.txt" seq="9" text="Description of Port" x="78" y="115">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="reqFormat.txt"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="local"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="dci-bridge host(64bit)"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom" ovalue="C:/fakepath/target.json_lom3" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom3" ovalue="C:/fakepath/target.json_lom2" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom2" ovalue="C:/fakepath/target.json_lom" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom" ovalue="C:/fakepath/target.json_agris" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basicinfo.json_lom" ovalue="C:/fakepath/basininfo.json_agris" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basininfo.json_agris" ovalue="C:/fakepath/basicinfo.json_lom" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_agris" ovalue="C:/fakepath/target.json_lom" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basicinfo.json_lom" ovalue="C:/fakepath/basininfo.json_agris" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom" ovalue="C:/fakepath/target.json_agris" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_agris" ovalue="C:/fakepath/target.json_lom" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basininfo.json_agris" ovalue="C:/fakepath/basicinfo.json_lom" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.output.intname" nvalue="reqFormat.txt" ovalue="reqformat.txt" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="reqformat.txt" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/application.tgz" ovalue="C:/fakepath/0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_lom" ovalue="C:/fakepath/target.json_agris" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basicinfo.json_lom" ovalue="C:/fakepath/basininfo.json_agris" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.output.intname" nvalue="target.json" ovalue="target.txt" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="application.tgz" ovalue="initharvester.jar" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/target.json_agris" ovalue="C:/fakepath/0" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.file" nvalue="C:/fakepath/basininfo.json_agris" ovalue="C:/fakepath/0" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="target.txt" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="max.txt" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="timestamp.txt" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="providerName.txt" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="datasetRemotePath.txt" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="key.txt" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="dci-bridge host(64bit)" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="local" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="target.json" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="initharvester.jar" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="basicInfo.json" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="2" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="LinkChecker" text="Description of Job" x="297" y="323">
+         <input name="PORT0" prejob="LOM2AKIF" preoutput="4" seq="0" text="Description of Port" x="343" y="308">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="inputs.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="rules.txt" prejob="" preoutput="" seq="3" text="Description of Port" x="296" y="308">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/rules.txt"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="rules.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="3"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="success.tgz" seq="1" text="Description of Port" x="282" y="369">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="success.tgz"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="wrong.tgz" seq="2" text="Description of Port" x="282" y="353">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="wrong.tgz"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="robotjobbundle" label="null" value="10902:#:HTUR_robot03_2013-12-06-085517:#:LinkChecker:#:bd455a3a-2064-4871-a513-2ff5b0e0b155"/>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="glite"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="vo.aginfra.eu"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <description key="glite.keyrequirements" value="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot03_2013-12-06-085517:#:LinkChecker:#:bd455a3a-2064-4871-a513-2ff5b0e0b155" ovalue="" port="-" tim="2013-12-06-09:29:42" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/rules.txt" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="3" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="rules.txt" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="delete.job.robotjobbundle" nvalue="" ovalue="10902:#:HTUR_robot01:#:LinkChecker:#:c363333d-81d3-4134-884c-5f134a860192" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot01:#:LinkChecker:#:c363333d-81d3-4134-884c-5f134a860192" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="others.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="others.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="glite" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="success.tgz" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="vo.aginfra.eu" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="inputs.tgz" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="LOM2AKIF" text="Description of Job" x="325" y="116">
+         <input name="inputs.tgz" prejob="Harvest" preoutput="4" seq="0" text="Description of Port" x="324" y="101">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="inputs.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="reqformat.txt" prejob="Init" preoutput="9" seq="1" text="Description of Port" x="310" y="115">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequalvalue" label="null" value="EDU"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="reqFormat.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="1"/>
+         </input>
+         <input name="PORT2" prejob="Init" preoutput="7" seq="2" text="Description of Port" x="310" y="146">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="providerName.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="wrong.tgz" seq="3" text="Description of Port" x="371" y="101">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="wrong.tgz"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <output name="correct.tgz" seq="4" text="Description of Port" x="340" y="176">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="correct.tgz"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="robotjobbundle" label="null" value="10902:#:HTUR_robot03_2013-12-06-085517:#:LOM2AKIF:#:add72573-5504-4a2d-9439-e4720a3bb97b"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="glite"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="vo.aginfra.eu"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <description key="glite.keyrequirements" value="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot03_2013-12-06-085517:#:LOM2AKIF:#:add72573-5504-4a2d-9439-e4720a3bb97b" ovalue="" port="-" tim="2013-12-06-09:29:42" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="providerName.txt" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="2" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="delete.job.robotjobbundle" nvalue="" ovalue="10902:#:HTUR_robot01:#:LOM2AKIF:#:d04e1e4a-3872-499a-b8b6-0b28a9e8c81b" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot01:#:LOM2AKIF:#:d04e1e4a-3872-499a-b8b6-0b28a9e8c81b" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="others.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="others.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.pequaltype" nvalue="1" ovalue="0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="1" ovalue="0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequalvalue" nvalue="EDU" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="reqFormat.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequalvalue" nvalue="oai_lom" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.pequaltype" nvalue="1" ovalue="0" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.intname" nvalue="wrong.tgz" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="key.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="inputs.tgz" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="vo.aginfra.eu" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="glite" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="RegisterDataSet" text="Description of Job" x="79" y="441">
+         <input name="outputLFN.txt" prejob="UploadDataSet" preoutput="6" seq="0" text="Description of Port" x="125" y="426">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="httpsendtype" label="null" value="STREAM"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="outputLFN.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="result" seq="1" text="Description of Port" x="139" y="440">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="result"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="1"/>
+         </output>
+         <execute desc="null" inh="null" key="servicetype" label="null" value="rest"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="service"/>
+         <execute desc="null" inh="null" key="params" label="null" value="application/json"/>
+         <execute desc="null" inh="null" key="servicemethod" label="null" value="POST"/>
+         <execute desc="null" inh="null" key="serviceurl" label="null" value="http://AkosBalasko:akosoka@agro.ipb.ac.rs/agcouchdb"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.servicetype" nvalue="rest" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="service" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.params" nvalue="application/json" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="outputLFN.txt" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.httpsendtype" nvalue="STREAM" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.serviceurl" nvalue="http://AkosBalasko:akosoka@agro.ipb.ac.rs/agcouchdb" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.servicemethod" nvalue="POST" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <job name="UploadDataSet" text="Description of Job" x="158" y="334">
+         <input name="oairecord.xml" prejob="LinkChecker" preoutput="1" seq="0" text="Description of Port" x="218" y="364">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="success.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="target.txt" prejob="Init" preoutput="4" seq="1" text="Description of Port" x="157" y="319">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="target.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="1"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="providerName.txt" prejob="Init" preoutput="7" seq="2" text="Description of Port" x="188" y="319">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="providerName.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="timestamp.txt" prejob="Init" preoutput="6" seq="3" text="Description of Port" x="173" y="319">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="timestamp.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="3"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="datasetRemotePath.txt" prejob="Init" preoutput="8" seq="4" text="Description of Port" x="143" y="333">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="one"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="datasetRemotePath.txt"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="4"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="jsonTemplate.json" prejob="" preoutput="" seq="5" text="Description of Port" x="218" y="380">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="file" label="null" value="C:/fakepath/0"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="jsonTemplate.json"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="5"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="Toairecord.xml" prejob="AGRIS2AGRIF" preoutput="2" seq="7" text="Description of Port" x="204" y="319">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="success.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="7"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="wrong.tgz" prejob="AGRIS2AGRIF" preoutput="3" seq="8" text="Description of Port" x="218" y="333">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="wrong.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="8"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <input name="LCwrong" prejob="LinkChecker" preoutput="2" seq="9" text="Description of Port" x="218" y="349">
+            <port_prop desc="null" inh="null" key="eparam" label="null" value="0"/>
+            <port_prop desc="null" inh="null" key="waitingtmp" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="waiting" label="null" value="all"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="wrong.tgz"/>
+            <port_prop desc="null" inh="null" key="dpid" label="null" value="9"/>
+            <port_prop desc="null" inh="null" key="pequaltype" label="null" value="0"/>
+         </input>
+         <output name="dataset.json" seq="6" text="Description of Port" x="157" y="394">
+            <port_prop desc="null" inh="null" key="maincount0" label="null" value="2"/>
+            <port_prop desc="null" inh="null" key="intname" label="null" value="dataset.json"/>
+            <port_prop desc="null" inh="null" key="type0" label="null" value="permament"/>
+            <port_prop desc="null" inh="null" key="maincount" label="null" value="2"/>
+         </output>
+         <execute desc="null" inh="null" key="robotjobbundle" label="null" value="10902:#:HTUR_robot03_2013-12-06-085517:#:UploadDataSet:#:f77b4cf1-ed78-427c-beea-29d4da0faf1a"/>
+         <execute desc="null" inh="null" key="binary" label="null" value="C:/fakepath/execute.bin"/>
+         <execute desc="null" inh="null" key="gridtype" label="null" value="glite"/>
+         <execute desc="null" inh="null" key="jobistype" label="null" value="binary"/>
+         <execute desc="null" inh="null" key="grid" label="null" value="vo.aginfra.eu"/>
+         <execute desc="null" inh="null" key="type" label="null" value="Sequence"/>
+         <description key="glite.keyrequirements" value="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot03_2013-12-06-085517:#:UploadDataSet:#:f77b4cf1-ed78-427c-beea-29d4da0faf1a" ovalue="" port="-" tim="2013-12-06-09:29:42" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName == &quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="delete.job.robotjobbundle" nvalue="" ovalue="10902:#:HTUR_robot01:#:UploadDataSet:#:5b809bd0-ad0d-4226-8db0-baf90ac25172" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot01:#:UploadDataSet:#:5b809bd0-ad0d-4226-8db0-baf90ac25172" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="delete.job.robotjobbundle" nvalue="" ovalue="10902:#:HTUR_robot01:#:UploadDataSet:#:d8704f03-b38b-40d9-9fa4-d3e5a82bf961" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot01:#:UploadDataSet:#:d8704f03-b38b-40d9-9fa4-d3e5a82bf961" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="delete.job.robotjobbundle" nvalue="" ovalue="10902:#:HTUR_robot01:#:UploadDataSet:#:0682144b-c687-4828-8617-ba961eea5ae5" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName==&quot;cream.ipb.ac.rs&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.robotjobbundle" nvalue="10902:#:HTUR_robot01:#:UploadDataSet:#:0682144b-c687-4828-8617-ba961eea5ae5" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.output.maincount0" nvalue="2" ovalue="1" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.output.maincount" nvalue="2" ovalue="1" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="0" ovalue="1" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="1" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="all" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="all" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="wrong.tgz" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="8" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="8" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="1" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="all" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="all" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="wrong.tgz" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="9" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="9" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.desc.glite.keyrequirements" nvalue="other.GlueCEInfoHostName!=&quot;gn0.hpcc.sztaki.hu&quot;" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="1" ovalue="0" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waitingtmp" nvalue="all" ovalue="one" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.eparam" nvalue="1" ovalue="0" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waitingtmp" nvalue="all" ovalue="one" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waiting" nvalue="all" ovalue="one" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="success.tgz" ovalue="Toairecord.xml" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.waiting" nvalue="all" ovalue="one" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="modify.input.intname" nvalue="success.tgz" ovalue="oairecord.xml" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="providerName.txt" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="1" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="target.txt" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="1" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="oairecord.xml" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="0" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.type" nvalue="Sequence" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.grid" nvalue="vo.aginfra.eu" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.jobistype" nvalue="binary" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="datasetRemotePath.txt" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.gridtype" nvalue="glite" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.job.binary" nvalue="C:/fakepath/execute.bin" ovalue="" port="-" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="4" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.type0" nvalue="permament" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.output.maincount0" nvalue="1" ovalue="" port="6" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="7" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="Toairecord.xml" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="7" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="5" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="jsonTemplate.json" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.intname" nvalue="timestamp.txt" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="3" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waitingtmp" nvalue="one" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.waiting" nvalue="one" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="4" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.file" nvalue="C:/fakepath/0" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="5" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.eparam" nvalue="0" ovalue="" port="3" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.dpid" nvalue="2" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+         <history mdyid="new.input.pequaltype" nvalue="0" ovalue="" port="2" tim="2013-12-06-08:55:18" user="10902"/>
+      </job>
+      <instances>
+         <instance name="wftype" rtid="*" value="null"/>
+      </instances>
+   </real>
+</workflow>

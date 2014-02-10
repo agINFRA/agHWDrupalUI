@@ -1,0 +1,36 @@
+#!/bin/sh
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+mkdir ./inputs
+mkdir ./bad
+mkdir ./outputs
+mv inputs.tgz ./inputs
+cd inputs
+tar xvzf ./inputs.tgz
+cd ..
+#mv record.xml ./inputs
+
+export ZETTA_LANGUAGE_PROFILE_FOLDER=${VO_VO_AGINFRA_EU_SW_DIR}/agLOMtoAKIF-1.0.2/profiles
+SET=`cat providerName.txt`
+echo "=============EXECUTION=============="
+${VO_VO_AGINFRA_EU_SW_DIR}/agJRE-1.7.0-17/bin/java -jar ${VO_VO_AGINFRA_EU_SW_DIR}/agLOMtoAKIF-1.0.2/agLOMtoAKIF-1.0.2.jar ./inputs ./outputs ./bad $SET
+echo "========EXECUTION FINISHED=========="
+ls -l
+echo "=================INPUTS============="
+ls -l ./inputs
+echo "=========OUTPUTS===================="
+ls -l ./outputs
+echo "===============BAD=================="
+ls -l ./bad
+
+cd ./bad 
+tar cvzf ./../wrong.tgz .
+cd ..
+
+cd ./outputs
+tar cvzf ./../correct.tgz .
+cd ..
+
+echo "EXECUTION_ENDTIME:" `date +%s`

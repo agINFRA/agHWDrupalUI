@@ -1,0 +1,183 @@
+#!/bin/sh
+
+function nfo()
+{
+
+echo '- Ran on host (hostname)  :' `hostname` >> gridnfo.log
+echo '- Host info-s (uname -a)  :' `uname -a` >> gridnfo.log
+echo '- Directory list (ls -la) : - - - - -' >> gridnfo.log
+ls -la >> gridnfo.log
+echo '- Environment var. (env): - - - - - -'>> gridnfo.log
+env >> gridnfo.log
+}
+
+function ext()
+{
+echo '- An error occured!' >> gridnfo.log
+nfo
+ exit $1
+ }
+
+function dolog()
+{
+if [ $# -eq 0 ]; then
+    cat >> gridnfo.log
+else
+    echo "$@" >> gridnfo.log
+fi
+}
+
+function lcgrealupload()
+{
+succ=false
+for (( t = 1; t <= 2; t++ ))
+do
+  dolog "$t. try to upload remote output ($2): $1 :"
+  lfc-ls ${1/lfn:/} &> /dev/null
+  if [ $? = 0 ]; then
+        dolog 'The remote file exists, we are about to remove it...'
+        GUID=`lcg-lg $1 2> /dev/null`
+        REPS=`lcg-lr $1 2> /dev/null`
+        for i in $REPS; do
+            lcg-del $i &> /dev/null
+            lcg-uf $GUID $i &> /dev/null
+        done
+        lcg-del -a $1 &> /dev/null
+        lfc-rm ${1/lfn:/} &> /dev/null
+  fi
+  if ( lcg-cr --vo $3 $4 -l $1 file:`pwd`/$2  >> gridnfo.log ) then
+     if (lcg-lr --vo $3 $1 >> gridnfo.log) then
+       succ=true
+       t=10
+     else
+       dolog 'Error. Sleep 3 sec.'
+      sleep 3
+    fi
+  else
+    dolog 'Error. Sleep 3 sec...'
+    sleep 3
+  fi
+done
+if ($succ) then
+    return 0
+else
+    return 1
+fi
+}
+
+function lcgupload()
+{
+success=1
+if [ -e `pwd`/$2 ]; then
+   lcgrealupload $1 $2 $3 "$4"
+   success=$?
+else
+
+if [ -e `pwd`/$2_0 ]; then
+PID=0
+while [  -f "./$2_${PID}" ]
+do
+   lcgrealupload $1_${PID} $2_${PID} $3 "$4"
+   success=$?
+   PID=`expr $PID + 1`
+done
+echo "Generator: number of remote output ${OUT}:"${PID} >> gridnfo.log
+echo $2#${PID}>>"REMOTEGENERATORS_PID"
+
+else
+  dolog "$2: No such file or directory"
+fi
+fi
+if (test $success -eq 0) then
+    dolog ' '
+else
+    ext 1
+fi
+}
+
+
+function instantiateJSON()
+{
+LFNPATH=$1
+#lfn:/vo.aginfra.eu/balasko/dkasodkasod/
+TGZNAME=$2
+#this_is_the_tgz.tgz
+LFN="$LFNPATH"$TGZNAME
+TARGETURL=$3
+PROVIDERNAME=$4
+FORMAT=$5 
+#oai_lom
+PROCESS=$6
+ACCURACY=$7
+PRODUCTION=$8
+OUTPUTFILE=$9
+#dctolom
+#echo lfn : $LFN
+ sed -e "s@<PRODUCTION>@$PRODUCTION@g" -e "s@<TARGETURL>@$TARGETURL@g" -e "s@<PROVIDERNAME>@$PROVIDERNAME@g" -e "s@<ACCURACY>@$ACCURACY@g" -e "s@<FORMAT>@$FORMAT@g" -e "s@<PROCESS>@$PROCESS@g" -e "s@<DATASETLOCATION>@$LFN@g" jsonTemplate.json> $OUTPUTFILE
+
+
+}
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+#X509_USER_PROXY=./x509up.vo.aginfra.eu
+
+
+#echo "Dummy uploading process"
+#echo "Content of this folder: "
+#ls -l
+#cat "Target can be registrated" > regTargetInfo
+
+echo "list contents"
+ls -l
+#TIMESTAMP=`date +%Y-%m-%d-%H-%M-%S`
+TIMESTAMP=`cat timestamp.txt`
+LFNPATH=`cat datasetRemotePath.txt`
+FILENAME=oai_record.xml
+CORRECTTGZNAME="correct_records_"$TIMESTAMP".tgz"
+WRONGTGZNAME="wrong_records_"$TIMESTAMP".tgz"
+#TESTING if there are any record to be uploaded
+#NUMBOFFILES=`ls oai_record.xml* | wc -l`
+#echo $NUMBOFFILES
+
+#if [ $NUMBOFFILES -eq 0 ]; then
+#    echo "No record files to be uploaded" >> stderr.log
+#    echo "No record files to be uploaded" >> stdout.log
+#    exit 1
+#fi
+
+ls -l 
+echo "Renaming file compression to " $TGZNAME
+#tar cvzf $TGZNAME "$FILENAME"*
+mv success.tgz_0 $CORRECTTGZNAME
+mv wrong.tgz_0 $WRONGTGZNAME
+
+ls -l
+
+export LFC_HOST=lfc.ipb.ac.rs
+export LCG_CATALOG_TYPE=lfc
+export LCG_GFAL_INFOSYS=bdii.ipb.ac.rs:2170
+#voms-proxy-init -voms vo.aginfra.eu: -noregen -out x509up
+
+nfo
+METADATA_TYPE=`cat target.txt | grep type | cut -f2 -d:|sed 's/",\?//g'`
+TARGETURL=`grep -Po '(?<="url":")[^"]*' target.txt`
+PROVIDERNAME=`grep -Po '(?<="name":")[^"]*' target.txt`
+echo $TARGETURL
+echo $PROVIDERNAME
+echo "Uploading tgz to agInfra Remote Data Storage"
+echo "link: "
+
+LFNDIR=`echo $LFNPATH | cut -f 2 -d:`
+echo $LFNDIR
+lfc-mkdir -p $LFNDIR >> gridnfo.log
+lcgupload $LFNPATH$CORRECTTGZNAME $CORRECTTGZNAME vo.aginfra.eu "-d dpm.ipb.ac.rs"
+lcgupload $LFNPATH$WRONGTGZNAME $WRONGTGZNAME vo.aginfra.eu "-d dpm.ipb.ac.rs"
+
+## GENERATING JSON FILE FROM TEMPLATE
+instantiateJSON $LFNPATH $CORRECTTGZNAME $TARGETURL "$PROVIDERNAME" $METADATA_TYPE agworkflow true false dataset.json_0
+instantiateJSON $LFNPATH $WRONGTGZNAME $TARGETURL "$PROVIDERNAME" $METADATA_TYPE agworkflow false false dataset.json_1
+
+
+echo "EXECUTION_ENDTIME:" `date +%s`

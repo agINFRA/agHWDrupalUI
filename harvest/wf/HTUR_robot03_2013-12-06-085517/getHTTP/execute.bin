@@ -1,0 +1,45 @@
+#!/bin/sh
+
+echo "EXECUTION_STARTTIME:" `date +%s`
+echo "RESOURCE: " `hostname`
+
+ls -l
+
+tar -xzf application.tgz
+rm -f application.tgz
+
+
+LOCALCLASSPATH=$CLASSPATH
+for JAR in *.jar; do
+LOCALCLASSPATH="$LOCALCLASSPATH:$JAR"
+done
+export CLASSPATH=$LOCALCLASSPATH
+
+echo "CLASSPATH ...."
+echo $CLASSPATH
+echo "...........END"
+java -version 1>gridnfo.log 2>gridnfo.log
+pjava=$?
+if test $pjava -ne 0
+then
+ echo 'JVM is not found on the selected remote resource.' >>stderr.log
+ echo 'The DCI Bridge is able to send a JVM. However this service is switched of.' >>stderr.log
+ echo 'Either select a proper remote resource,' >>stderr.log
+ echo 'or ask the system administrator of the DCI Bridge for enabling the JVM transfer.' >>stderr.log
+fi
+echo '- Exe started at          :' `date` >> gridnfo.log
+java -jar MetadataRetriever-1.0.jar result.json_0 result.json_1
+exitc=$?
+echo '- Exe finished at         :' `date` >> gridnfo.log
+echo '- The exit code of the exe:' $exitc >> gridnfo.log
+rm -f -r ./java
+if test $exitc -ne 0
+ then
+ exit 1
+ fi
+echo '- Wrapper script finished succesfully '>> gridnfo.log
+
+#echo "Renaming outputs..." 
+
+echo "EXECUTION_ENDTIME:" `date +%s`
+exit 0
